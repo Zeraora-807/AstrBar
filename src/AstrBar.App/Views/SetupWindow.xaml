@@ -1,0 +1,203 @@
+<Window x:Class="AstrBar.Views.SetupWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="AstrBar 初始设置"
+        Width="650"
+        Height="965"
+        MinHeight="650"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize"
+        Background="{DynamicResource WindowBackgroundBrush}">
+    <Grid Margin="26">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <Border Width="52"
+                    Height="52"
+                    HorizontalAlignment="Left"
+                    CornerRadius="16"
+                    Background="{DynamicResource AccentBrush}">
+                <TextBlock Text="✦"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Foreground="White"
+                           FontSize="25"/>
+            </Border>
+            <TextBlock Margin="0,14,0,0"
+                       Text="Nice to meet you - AstrBar"
+                       FontFamily="Century Bold, Microsoft YaHei UI"
+                       FontSize="25"
+                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Margin="0,6,0,0"
+                       Text="AstrBar 的初始设置。"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1"
+                      Margin="0,22,0,16"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <Border Padding="18"
+                        CornerRadius="14"
+                        Background="{DynamicResource PanelBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="服务器与 SSH"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+                        <Grid Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="服务器公网 IP 或域名" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBox x:Name="SshHostInput" Margin="0,6,0,0" ToolTip="例如 203.0.113.10 或 server.example.com"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="SSH 端口" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBox x:Name="SshPortInput" Margin="0,6,0,0" Text="22"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="SSH 用户名" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBox x:Name="SshUsernameInput" Margin="0,6,0,0" Text="root"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="SSH 密码" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <PasswordBox x:Name="SshPasswordInput" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="AstrBot 服务器端口" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBox x:Name="RemotePortInput" Margin="0,6,0,0" Text="6185"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="本地转发端口" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBox x:Name="LocalPortInput" Margin="0,6,0,0" Text="6185"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Margin="0,14,0,0"
+                        Padding="18"
+                        CornerRadius="14"
+                        Background="{DynamicResource PanelBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="AstrBot 身份"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Margin="0,12,0,0"
+                                   Text="OpenAPI Key（需要 chat 与 file scope）"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <PasswordBox x:Name="ApiKeyInput" Margin="0,6,0,0"/>
+
+                        <Grid Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="username" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBox x:Name="UsernameInput" Margin="0,6,0,0" Text="astrbar-local"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="session_id" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBox x:Name="SessionIdInput" Margin="0,6,0,0" Text="astrbar-main"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Margin="0,14,0,0"
+                        Padding="18"
+                        CornerRadius="14"
+                        Background="{DynamicResource PanelBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="14"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="界面配色" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <ComboBox x:Name="ThemeInput"
+                                      Margin="0,6,0,0"
+                                      Style="{StaticResource AstrBarComboBoxStyle}"
+                                      ItemTemplate="{StaticResource ThemeOptionTemplate}"
+                                      SelectionChanged="ThemeInput_SelectionChanged"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="悬浮球配色" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <ComboBox x:Name="OrbColorInput"
+                                      Margin="0,6,0,0"
+                                      Style="{StaticResource AstrBarComboBoxStyle}"
+                                      ItemTemplate="{StaticResource OrbColorOptionTemplate}"
+                                      SelectionChanged="ThemeInput_SelectionChanged"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Margin="0,14,0,0"
+                        Padding="12"
+                        CornerRadius="10"
+                        Background="{DynamicResource AccentSoftBrush}">
+                    <TextBlock Text="密码与 API Key 会加密保存到 LocalAppData，不会写进程序目录。首次连接会记录 SSH 主机指纹。"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </Border>
+
+                <TextBlock x:Name="StatusText"
+                           Margin="0,14,0,0"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Width="110"
+                    Style="{StaticResource GhostButtonStyle}"
+                    Click="CancelButton_Click"
+                    Content="暂不设置"/>
+            <Button x:Name="ConnectButton"
+                    Grid.Column="1"
+                    Width="180"
+                    Click="ConnectButton_Click"
+                    Content="测试并进入 AstrBar"/>
+        </Grid>
+    </Grid>
+</Window>

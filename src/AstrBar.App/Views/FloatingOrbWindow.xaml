@@ -1,0 +1,55 @@
+<Window x:Class="AstrBar.Views.FloatingOrbWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="AstrBar 悬浮球"
+        Width="58"
+        Height="58"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="True"
+        PreviewMouseLeftButtonDown="Orb_MouseLeftButtonDown"
+        PreviewMouseMove="Orb_MouseMove"
+        PreviewMouseLeftButtonUp="Orb_MouseLeftButtonUp">
+    <Window.ContextMenu>
+        <ContextMenu>
+            <MenuItem Header="打开 AstrBar" Click="OpenMenuItem_Click"/>
+            <MenuItem Header="设置" Click="SettingsMenuItem_Click"/>
+            <Separator/>
+            <MenuItem Header="退出" Click="ExitMenuItem_Click"/>
+        </ContextMenu>
+    </Window.ContextMenu>
+
+    <Grid>
+        <Border x:Name="OrbBorder"
+                Margin="3"
+                CornerRadius="26"
+                Background="{DynamicResource OrbBrush}"
+                BorderBrush="#FFFFFF"
+                BorderThickness="2"
+                Cursor="Hand">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="14"
+                                  ShadowDepth="3"
+                                  Opacity="0.28"/>
+            </Border.Effect>
+            <TextBlock Text="✦"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Foreground="White"
+                       FontSize="23"/>
+        </Border>
+
+        <Ellipse x:Name="UnreadDot"
+                 Width="11"
+                 Height="11"
+                 HorizontalAlignment="Right"
+                 VerticalAlignment="Top"
+                 Fill="#FF4D67"
+                 Stroke="White"
+                 StrokeThickness="2"
+                 Visibility="Collapsed"/>
+    </Grid>
+</Window>

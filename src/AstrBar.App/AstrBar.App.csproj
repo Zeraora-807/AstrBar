@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+	<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+	<SelfContained>true</SelfContained>
+	<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+	<PublishTrimmed>false</PublishTrimmed>
+	<PublishSingleFile>false</PublishSingleFile>
+	<DebugType>none</DebugType>
+	<DebugSymbols>false</DebugSymbols>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Version>0.3.1</Version>
+    <AssemblyVersion>0.3.1.0</AssemblyVersion>
+    <FileVersion>0.3.1.0</FileVersion>
+
+    <!-- Unpackaged WPF app. Windows App SDK initializes through its NuGet package. -->
+    <WindowsPackageType>None</WindowsPackageType>
+    <ApplicationIcon>Resources\astrbar.ico</ApplicationIcon>
+    <AssemblyName>AstrBar</AssemblyName>
+    <RootNamespace>AstrBar</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260710003" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+    <PackageReference Include="SSH.NET" Version="2025.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\astrbar.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>
