@@ -1,0 +1,264 @@
+{
+  "project": "AstrBar v0.3.1",
+  "base": "Patch release based on AstrBar v0.3.0",
+  "fixes": [
+    "Modern pill-style settings tabs and card content area",
+    "Theme and orb color ComboBoxes render localized DisplayName text",
+    "Theme and orb choices include color swatch previews",
+    "ThemeOption and OrbColorOption ToString fall back to DisplayName"
+  ],
+  "validation": [
+    "All XAML and project XML files parsed successfully",
+    "All declared XAML event handlers were matched to code-behind methods",
+    "C# lexical delimiter checks passed for all source files",
+    "Theme ComboBoxes no longer use DisplayMemberPath with the custom selection template",
+    "A full WPF build could not be executed because this environment has no .NET/WPF toolchain; Visual Studio compilation is still required"
+  ],
+  "generated_files": [
+    {
+      "path": ".gitignore",
+      "size": 62,
+      "sha256": "df2f315aafa03ff719031c9d6a5e41ea6a31d16aee8bd01a1aa1a2825e1df028"
+    },
+    {
+      "path": "AstrBar.sln",
+      "size": 893,
+      "sha256": "9ef4fc003bf4a7bd5f1fea995c56e1327a5261f7d088775b5566dd60413469fb"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "size": 1889,
+      "sha256": "bf1f75a7626a5c73296bc3cba1baa8fd0d9896331282bc980db0960f5c85a276"
+    },
+    {
+      "path": "README.md",
+      "size": 6359,
+      "sha256": "edf1fe3a9faf9b0c04ea1ecfead4a95bed21590861b339216f1b2fb60708a6e1"
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "size": 3916,
+      "sha256": "1462c6eb5000cbf8f2467a8a4fada922e134fc0f93d177cd5d7f26f2d37f2b94"
+    },
+    {
+      "path": "docs/ASTRBOT_PROTOCOL.md",
+      "size": 2681,
+      "sha256": "384bf7a451bb94c449f4e788befd12251478df994f341c3a4ad5fb78e8f95c20"
+    },
+    {
+      "path": "docs/DEVELOPMENT.md",
+      "size": 4829,
+      "sha256": "9c84ac8ef169241cd0f7b34c80ab44194a7092862b4b951ac4d9198dc3206154"
+    },
+    {
+      "path": "docs/ROADMAP.md",
+      "size": 1608,
+      "sha256": "97b2a8670bdefcb126238c84d9a9c704c0ec48b20ea2d6a50649758ae1d19d52"
+    },
+    {
+      "path": "docs/TESTING.md",
+      "size": 3038,
+      "sha256": "21dc79650b3aeedfccd77612917a9502125c667d56a96cb572fc9bb44c139429"
+    },
+    {
+      "path": "scripts/README.txt",
+      "size": 598,
+      "sha256": "e292627d1c98ce79ac8eeaa6d5b3abfff32dba2fd4019407f9b5d5d8b51c9f6b"
+    },
+    {
+      "path": "scripts/build.ps1",
+      "size": 352,
+      "sha256": "46500e1a0224212ebccb82edfe44448fc42db171b6b5bc6b5c2e0f5d76c5d499"
+    },
+    {
+      "path": "scripts/start-tunnel.ps1",
+      "size": 808,
+      "sha256": "35339c6e4c64fddd701d27f7d12847e89d2f483e12176daad43b8254ef8a21e9"
+    },
+    {
+      "path": "scripts/test-astrbot.ps1",
+      "size": 2393,
+      "sha256": "baf14c972122089c4ed438c9965c2ed0c6d025c17356a017ac397bf2808b5e42"
+    },
+    {
+      "path": "src/AstrBar.App/App.xaml",
+      "size": 20434,
+      "sha256": "125f4ffff082f842c42d062afbedc0c8e1d2f43aa179e36410df0e248dd2ccd6"
+    },
+    {
+      "path": "src/AstrBar.App/App.xaml.cs",
+      "size": 6312,
+      "sha256": "280bf2d3e94806372b2bff0f62b607832b1f217bf51b88fef17f7718eb76460c"
+    },
+    {
+      "path": "src/AstrBar.App/AstrBar.App.csproj",
+      "size": 1256,
+      "sha256": "eccf2adf52e4b988286b3fdf6dd7baf1c460ecc3239a2cd5ec75188367f785d6"
+    },
+    {
+      "path": "src/AstrBar.App/GlobalUsings.cs",
+      "size": 210,
+      "sha256": "d03327e3c06ec253be34ba7bffe66b5d6080e0e2d011e7d364ba1c2a96360076"
+    },
+    {
+      "path": "src/AstrBar.App/Models/AppSettings.cs",
+      "size": 1371,
+      "sha256": "ccebc2bc46dd7f78ef0adceafea6fb1b74264f863c1939e1927b5bd7a6403392"
+    },
+    {
+      "path": "src/AstrBar.App/Models/ChatMessage.cs",
+      "size": 2619,
+      "sha256": "34a36988c85b1e0785936c9fc3211817abfad349c6117e08e1aeedd81192f287"
+    },
+    {
+      "path": "src/AstrBar.App/Models/ChatStreamChunk.cs",
+      "size": 332,
+      "sha256": "3b9c6776674ce2cd39aded0bff20f1d0da1900e3db65287344d92732d9adb0af"
+    },
+    {
+      "path": "src/AstrBar.App/Models/ClientEvent.cs",
+      "size": 212,
+      "sha256": "dece3db8f86b47f8410e01b35376b536441fba25e69b1353be02524ed8c15c7e"
+    },
+    {
+      "path": "src/AstrBar.App/Models/MessagePart.cs",
+      "size": 4629,
+      "sha256": "90886664cc63cc0617e343d84cc7b408d0c912030b9d676d82be6d4051171711"
+    },
+    {
+      "path": "src/AstrBar.App/Models/OutgoingAttachment.cs",
+      "size": 3250,
+      "sha256": "35c3b08d92a26236991ad15b90c184f3baeff7266fe3f83c11850b4b98ffdbae"
+    },
+    {
+      "path": "src/AstrBar.App/Models/SendMode.cs",
+      "size": 96,
+      "sha256": "74526a8b25b9dd85302dd3e8b62bb9f98b146129c08eb0a0ef644e2337d346aa"
+    },
+    {
+      "path": "src/AstrBar.App/Models/ThemeOption.cs",
+      "size": 593,
+      "sha256": "ec5c9f8c4840d94f412e600789fe10c4e264f77d37d986ae81b4d5f927578437"
+    },
+    {
+      "path": "src/AstrBar.App/Resources/astrbar.ico",
+      "size": 14401,
+      "sha256": "f3a6c79bf0c53751b186f80cbb72d597da73c56976291b91f29c09577fa309db"
+    },
+    {
+      "path": "src/AstrBar.App/Services/AstrBotClient.cs",
+      "size": 22721,
+      "sha256": "dcf5a27687c83b33bd2da1309a6bbcbd46b141c7de0b35ad112ac8d93b2e8939"
+    },
+    {
+      "path": "src/AstrBar.App/Services/AttachmentService.cs",
+      "size": 5557,
+      "sha256": "5601e7721913285355e976c9aeb65e4e51d419e634378be8b5de5b80f4c628ed"
+    },
+    {
+      "path": "src/AstrBar.App/Services/CredentialService.cs",
+      "size": 2029,
+      "sha256": "7736702447b5581554d64572e59557bfc5134cbef7e5110799ad9b48fa4e312a"
+    },
+    {
+      "path": "src/AstrBar.App/Services/HotkeyService.cs",
+      "size": 1898,
+      "sha256": "9176b735d66140cfe7f333af1c4467da0c8a8802a855a38b04dcf29b07a433b2"
+    },
+    {
+      "path": "src/AstrBar.App/Services/IClientEventSource.cs",
+      "size": 226,
+      "sha256": "1d3d4d0dab71f0e413d819313808f67041fa321f5ae0365f89dcd48eeaa26b95"
+    },
+    {
+      "path": "src/AstrBar.App/Services/MessageRoutingService.cs",
+      "size": 1482,
+      "sha256": "f03a826b5b57aa8c3f514849f63d4f036384b747389a4e60ec3601aeed477314"
+    },
+    {
+      "path": "src/AstrBar.App/Services/NotificationService.cs",
+      "size": 2278,
+      "sha256": "7970f5d6b553453b0d3fb8077029c1d1b7ce04eca5e723c1adab1fe87a19a3db"
+    },
+    {
+      "path": "src/AstrBar.App/Services/SettingsService.cs",
+      "size": 2423,
+      "sha256": "ef08e63997a4fcde3791dcedf35b187b2b6e6404b0e61b869c4e16f39497b20d"
+    },
+    {
+      "path": "src/AstrBar.App/Services/SshTunnelService.cs",
+      "size": 8773,
+      "sha256": "8d1eb75789ff83cf1eeefb7b55621c65011dc01af66694965b3f5c74c57851f4"
+    },
+    {
+      "path": "src/AstrBar.App/Services/StartupService.cs",
+      "size": 847,
+      "sha256": "237cd2edf17b86e41ca8669c59c314c3721f31b5a2293c9fce6e8e347a469cdb"
+    },
+    {
+      "path": "src/AstrBar.App/Services/ThemeService.cs",
+      "size": 3147,
+      "sha256": "8314276d8a719742b2d8628c94a7c51d46a97726cf786bdb711871261aaf54ed"
+    },
+    {
+      "path": "src/AstrBar.App/Services/TrayIconService.cs",
+      "size": 2438,
+      "sha256": "83ac88db6091444ff87161dcc8d808dce11a1b4208ed8e4799ab5482312ec270"
+    },
+    {
+      "path": "src/AstrBar.App/Services/WindowStateService.cs",
+      "size": 2324,
+      "sha256": "dbdc5c421fdb5e5097eb1032ebce81e28bccae2e044130e8a57b4b8725f6ba8d"
+    },
+    {
+      "path": "src/AstrBar.App/Views/ChatPopupWindow.xaml",
+      "size": 18355,
+      "sha256": "e9c3f0d79bb4887be628ccfeb561448fcf68aab90a460ed819e7a5e005a20d7e"
+    },
+    {
+      "path": "src/AstrBar.App/Views/ChatPopupWindow.xaml.cs",
+      "size": 25548,
+      "sha256": "8fed52583acee1294fa2af2447a1bcb8e20d6f06ebeb6b98ab0314b59b6951d6"
+    },
+    {
+      "path": "src/AstrBar.App/Views/FloatingOrbWindow.xaml",
+      "size": 1988,
+      "sha256": "643fe04419ffe3d082911ebdfdb9bb560ab71d0a523e6c864bbbfb1641289131"
+    },
+    {
+      "path": "src/AstrBar.App/Views/FloatingOrbWindow.xaml.cs",
+      "size": 5598,
+      "sha256": "477e47bcf58de1593cd3c58afff12afa5de9414e714ab1a712e7840301b16f05"
+    },
+    {
+      "path": "src/AstrBar.App/Views/ImagePreviewWindow.xaml",
+      "size": 664,
+      "sha256": "044167126faf94d3bdf84d69bd70f14ae4a85ed1ee54bc0b97a424a6a1a81b08"
+    },
+    {
+      "path": "src/AstrBar.App/Views/ImagePreviewWindow.xaml.cs",
+      "size": 507,
+      "sha256": "1436033a85c071d143d1164a02911dd1835232da0d0c82bf3b081ee9b57a4597"
+    },
+    {
+      "path": "src/AstrBar.App/Views/SettingsWindow.xaml",
+      "size": 12766,
+      "sha256": "bc9cd424de97b0076aefcaa784ec465f1d6107cf29be73541398eb3f895ebf3a"
+    },
+    {
+      "path": "src/AstrBar.App/Views/SettingsWindow.xaml.cs",
+      "size": 11526,
+      "sha256": "4b87b5915516db874bb5961e270e1005f7b0bb053ee64370308c67ac0b6fa894"
+    },
+    {
+      "path": "src/AstrBar.App/Views/SetupWindow.xaml",
+      "size": 10711,
+      "sha256": "25cc0661c29624be3a73e50b8f34742f61ad7800f5829aea441d5cd6b957fe9f"
+    },
+    {
+      "path": "src/AstrBar.App/Views/SetupWindow.xaml.cs",
+      "size": 6885,
+      "sha256": "3975af045f2ffcacfd653818144a27af32b5446f8f984bdd9f91e3699a68e46c"
+    }
+  ]
+}
