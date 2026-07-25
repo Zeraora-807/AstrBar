@@ -2,7 +2,7 @@
 
 AstrBar 是一个面向 AstrBot 的轻量 Windows 桌面客户端。
 
-v1.0 不再借用 AstrBot 默认 WebChat/OpenAPI 作为聊天入口，而是与 `astrbot_plugin_astrbar_essential` 提供的原生 `astrbar` 平台适配器通信。第三方插件仍然面对 AstrBot 标准事件和消息链，因此不需要为了 AstrBar 修改代码。
+注意：v1.0 之后，不再借用 AstrBot 默认 WebChat/OpenAPI 作为聊天入口，而是与 `astrbot_plugin_astrbar_essential` 提供的原生 `astrbar` 平台适配器通信。第三方插件仍然面对 AstrBot 标准事件和消息链，因此**不需要**为了 AstrBar 修改代码。
 
 ## v1.0 的变化
 
@@ -55,7 +55,7 @@ AstrBot/data/plugins/astrbot_plugin_astrbar_essential
 id: astrbar-main
 host: 0.0.0.0
 port: 6190
-token: 一段随机且足够长的令牌
+token: 自定义文本
 heartbeat_interval: 20
 max_attachment_mb: 128
 attachment_ttl_hours: 24
@@ -71,7 +71,7 @@ ports:
   - "127.0.0.1:6190:6190"
 ```
 
-不要把 6190 直接暴露到公网。AstrBar 默认通过 SSH 隧道访问它。
+AstrBar 默认通过 SSH 隧道访问。
 
 ## Windows 客户端初始化
 
@@ -99,8 +99,6 @@ AstrBar
 → AstrBot 标准事件管道
 → LLM 与第三方插件
 ```
-
-v1.0 不需要 AstrBot OpenAPI Key，也不需要 `chat`、`file` scope。初始化中的 Protocol Token 必须与 Essential 平台配置中的 `token` 完全一致。
 
 ## 从 v0.3.1 升级
 
@@ -167,21 +165,6 @@ SSH.NET
 System.Security.Cryptography.ProtectedData
 ```
 
-## Release 发布
-
-```powershell
-.\scripts\publish.ps1 -Version 1.0.0
-```
-
-输出位于：
-
-```text
-release\AstrBar-v1.0.0-win-x64\
-release\AstrBar-v1.0.0-win-x64.zip
-```
-
-当前源码未附带可信代码签名证书。开启 Smart App Control 的设备可能拦截未签名构建。
-
 ## 文档
 
 - `docs/ASTRBAR_PROTOCOL.md`：客户端使用的协议字段与事件
@@ -189,9 +172,3 @@ release\AstrBar-v1.0.0-win-x64.zip
 - `docs/DEVELOPMENT.md`：代码结构与开发约束
 - `docs/TESTING.md`：v1.0 回归测试清单
 - `docs/ROADMAP.md`：后续版本方向
-
-## 当前限制
-
-- AstrBot 暂未向平台适配器暴露稳定的按请求取消接口，因此“停止”会立即停止客户端等待，但服务端任务可能继续运行
-- 仅保证兼容使用 AstrBot 标准消息接口的插件，直接调用 QQ、Telegram 等平台私有 API 的插件仍属于特定平台插件
-- 本仓库提供源码，不包含已签名的 Windows 安装包
