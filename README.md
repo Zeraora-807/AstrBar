@@ -4,18 +4,6 @@ AstrBar 是一个面向 AstrBot 的轻量 Windows 桌面客户端。
 
 注意：v1.0 之后，不再借用 AstrBot 默认 WebChat/OpenAPI 作为聊天入口，而是与 `astrbot_plugin_astrbar_essential` 提供的原生 `astrbar` 平台适配器通信。第三方插件仍然面对 AstrBot 标准事件和消息链，因此**不需要**为了 AstrBar 修改代码。
 
-## v1.0 的变化
-
-- 使用 AstrBar Protocol v1，通过 WebSocket 双向传输消息
-- 使用 HTTP 上传和下载附件
-- AstrBot 中注册独立的 `astrbar` 消息平台
-- 支持流式文字、图片、音频、视频、文件和引用消息
-- 支持服务端主动消息与离线消息重放
-- 支持消息 ACK、事件去重、心跳和自动重连
-- 上报窗口可见、聚焦与勿扰状态
-- 基于消息因果关系决定 Windows 通知，而非要求第三方插件发送通知标记
-- 保留 v0.3.1 的内置 SSH 隧道、托盘、悬浮球、主题与附件界面
-
 ## 组成
 
 AstrBar v1.0 需要同时部署：
@@ -86,7 +74,7 @@ AstrBar Protocol 服务器端口，默认 6190
 AstrBar Protocol Token
 user_id
 session_id
-device_id 与设备名称
+etc.
 ```
 
 连接链路：
@@ -97,29 +85,8 @@ AstrBar
 → 服务器 127.0.0.1:6190
 → AstrBar Essential
 → AstrBot 标准事件管道
-→ LLM 与第三方插件
+→ etc.
 ```
-
-## 从 v0.3.1 升级
-
-v1.0 会识别旧配置，并重新打开初始化向导，因为通信后端已从 WebChat 6185 切换为 AstrBar Protocol 6190。
-
-设置和凭据仍位于：
-
-```text
-%LOCALAPPDATA%\AstrBar
-```
-
-主要文件：
-
-```text
-settings.json
-protocol-token.bin
-ssh-password.bin
-Cache\Attachments\
-```
-
-Protocol Token 与 SSH 密码使用 Windows DPAPI CurrentUser 加密，不写入程序目录。
 
 ## 通知逻辑
 
@@ -137,32 +104,6 @@ AstrBar 不要求第三方插件发送专用通知信号。
 长任务完成 + 窗口未聚焦     → “后台任务已完成”通知
 窗口正在聚焦               → 只更新聊天界面
 勿扰模式                   → 不弹通知
-```
-
-## 编译
-
-在包含 `AstrBar.sln` 的目录运行：
-
-```powershell
-.\scripts\build.ps1
-```
-
-或使用 Visual Studio：
-
-```text
-打开 AstrBar.sln
-→ 还原 NuGet
-→ 将 AstrBar.App 设为启动项目
-→ 生成解决方案
-→ F5
-```
-
-主要依赖：
-
-```text
-Microsoft.WindowsAppSDK
-SSH.NET
-System.Security.Cryptography.ProtectedData
 ```
 
 ## 文档
