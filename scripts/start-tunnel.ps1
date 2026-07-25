@@ -3,26 +3,17 @@ param(
     [string]$Server,
 
     [string]$User = "root",
-    [int]$LocalPort = 6185,
-    [int]$RemotePort = 6185
+    [int]$SshPort = 22,
+    [int]$LocalPort = 6190,
+    [int]$RemotePort = 6190
 )
 
 $ErrorActionPreference = "Stop"
-$forward = "${LocalPort}:127.0.0.1:${RemotePort}"
-
-Write-Host "Starting AstrBot SSH tunnel..." -ForegroundColor Cyan
-Write-Host "  Local:  http://127.0.0.1:$LocalPort"
-Write-Host "  Remote: $User@$Server -> 127.0.0.1:$RemotePort"
-Write-Host "Keep this window open. Press Ctrl+C to stop the tunnel." -ForegroundColor Yellow
-Write-Host ""
-
-if (-not (Get-Command ssh -ErrorAction SilentlyContinue)) {
-    throw "OpenSSH client was not found. Install Windows OpenSSH Client first."
-}
+Write-Host "Emergency/debug tunnel only." -ForegroundColor Yellow
+Write-Host "AstrBar normally manages this tunnel through SSH.NET." -ForegroundColor Yellow
+Write-Host "Forwarding 127.0.0.1:$LocalPort -> server 127.0.0.1:$RemotePort"
 
 ssh -N `
-    -o ExitOnForwardFailure=yes `
-    -o ServerAliveInterval=30 `
-    -o ServerAliveCountMax=3 `
-    -L $forward `
-    "$User@$Server"
+    -p $SshPort `
+    -L "${LocalPort}:127.0.0.1:${RemotePort}" `
+    "${User}@${Server}"

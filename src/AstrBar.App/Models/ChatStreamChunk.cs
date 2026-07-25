@@ -7,6 +7,7 @@ public enum ChatStreamChunkKind
     AttachmentSaved,
     Status,
     Session,
+    Metadata,
     End
 }
 
@@ -15,4 +16,6 @@ public sealed record ChatStreamChunk(
     string Value = "",
     bool ReplaceExisting = false,
     string AttachmentType = "",
-    string AttachmentId = "");
+    string AttachmentId = "",
+    int? ElapsedMilliseconds = null,
+    string Origin = "");

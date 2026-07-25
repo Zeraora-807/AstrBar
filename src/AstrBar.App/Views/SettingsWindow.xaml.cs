@@ -10,7 +10,7 @@ public partial class SettingsWindow : Window
     private readonly SettingsService _settingsService;
     private readonly CredentialService _credentialService;
     private readonly StartupService _startupService;
-    private readonly AstrBotClient _astrBotClient;
+    private readonly AstrBarProtocolClient _protocolClient;
     private readonly SshTunnelService _sshTunnelService;
     private readonly ThemeService _themeService;
     private string _fingerprint = string.Empty;
@@ -20,7 +20,7 @@ public partial class SettingsWindow : Window
         SettingsService settingsService,
         CredentialService credentialService,
         StartupService startupService,
-        AstrBotClient astrBotClient,
+        AstrBarProtocolClient protocolClient,
         SshTunnelService sshTunnelService,
         ThemeService themeService)
     {
@@ -28,7 +28,7 @@ public partial class SettingsWindow : Window
         _settingsService = settingsService;
         _credentialService = credentialService;
         _startupService = startupService;
-        _astrBotClient = astrBotClient;
+        _protocolClient = protocolClient;
         _sshTunnelService = sshTunnelService;
         _themeService = themeService;
 
@@ -50,12 +50,18 @@ public partial class SettingsWindow : Window
         LocalPortInput.Text = settings.LocalForwardPort.ToString();
         AutoReconnectInput.IsChecked = settings.AutoReconnectTunnel;
         BaseUrlInput.Text = settings.BaseUrl;
-        ApiKeyInput.Password = _credentialService.LoadApiKey();
+        ApiKeyInput.Password = _credentialService.LoadProtocolToken();
         UsernameInput.Text = settings.Username;
         SessionIdInput.Text = settings.SessionId;
+        DeviceNameInput.Text = settings.DeviceName;
+        DeviceIdInput.Text = settings.DeviceId;
         WakePrefixInput.Text = settings.WakePrefix;
         CommandPrefixesInput.Text = string.Join(",", settings.CommandPrefixes ?? ["/"]);
         NotifyOnCompleteInput.IsChecked = settings.NotifyOnComplete;
+        NotifyProactiveInput.IsChecked = settings.NotifyProactiveMessages;
+        NotifyErrorsInput.IsChecked = settings.NotifyErrors;
+        DoNotDisturbInput.IsChecked = settings.DoNotDisturb;
+        LongTaskThresholdInput.Text = settings.LongTaskThresholdSeconds.ToString();
         StartWithWindowsInput.IsChecked = settings.StartWithWindows;
         KeepTopmostInput.IsChecked = settings.KeepPopupTopmost;
         OrbSnapInput.IsChecked = settings.OrbSnapToEdge;
@@ -87,11 +93,10 @@ public partial class SettingsWindow : Window
                 FingerprintText.Text = _fingerprint;
             }
 
-            await _astrBotClient.TestConnectionAsync(
-                candidate.BaseUrl,
-                ApiKeyInput.Password,
-                candidate.Username);
-            TestStatusText.Text = "连接成功，chat 与 file scope 均可用。";
+            await _protocolClient.TestConnectionAsync(
+                candidate,
+                ApiKeyInput.Password);
+            TestStatusText.Text = "连接成功，AstrBar Protocol 握手、状态接口与 Token 均可用。";
         }
         catch (Exception ex)
         {
@@ -130,7 +135,14 @@ public partial class SettingsWindow : Window
                 await _sshTunnelService.StopAsync();
             }
 
-            _credentialService.SaveApiKey(ApiKeyInput.Password);
+            await _protocolClient.TestConnectionAsync(
+                settings,
+                ApiKeyInput.Password);
+            await _protocolClient.ReconnectAsync(
+                settings,
+                ApiKeyInput.Password);
+
+            _credentialService.SaveProtocolToken(ApiKeyInput.Password);
             _credentialService.SaveSshPassword(
                 settings.UseEmbeddedSshTunnel ? SshPasswordInput.Password : string.Empty);
             _settingsService.Save(settings);
@@ -156,11 +168,13 @@ public partial class SettingsWindow : Window
         var useTunnel = UseTunnelInput.IsChecked == true;
         if (string.IsNullOrWhiteSpace(ApiKeyInput.Password))
         {
-            throw new InvalidOperationException("请填写 AstrBot API Key。");
+            throw new InvalidOperationException("请填写 AstrBar Protocol Token。");
         }
-        if (string.IsNullOrWhiteSpace(UsernameInput.Text) || string.IsNullOrWhiteSpace(SessionIdInput.Text))
+        if (string.IsNullOrWhiteSpace(UsernameInput.Text) ||
+            string.IsNullOrWhiteSpace(SessionIdInput.Text) ||
+            string.IsNullOrWhiteSpace(DeviceIdInput.Text))
         {
-            throw new InvalidOperationException("username 与 session_id 不能为空。");
+            throw new InvalidOperationException("user_id、session_id 与 device_id 不能为空。");
         }
         var prefixes = ParseCommandPrefixes();
         if (prefixes.Length == 0)
@@ -191,6 +205,7 @@ public partial class SettingsWindow : Window
 
         return new AppSettings
         {
+            ProtocolVersion = ProtocolEnvelope.CurrentProtocol,
             IsInitialized = true,
             UseEmbeddedSshTunnel = useTunnel,
             SshHost = SshHostInput.Text.Trim(),
@@ -198,17 +213,26 @@ public partial class SettingsWindow : Window
             SshUsername = SshUsernameInput.Text.Trim(),
             SshHostKeyFingerprint = _fingerprint,
             AstrBotRemoteHost = "127.0.0.1",
-            AstrBotRemotePort = useTunnel ? ParsePort(RemotePortInput.Text, "AstrBot 端口") : old.AstrBotRemotePort,
+            AstrBotRemotePort = useTunnel ? ParsePort(RemotePortInput.Text, "AstrBar Protocol 端口") : old.AstrBotRemotePort,
             LocalForwardPort = localPort,
             AutoReconnectTunnel = AutoReconnectInput.IsChecked == true,
             BaseUrl = baseUrl,
             Username = UsernameInput.Text.Trim(),
             SessionId = SessionIdInput.Text.Trim(),
+            DeviceId = DeviceIdInput.Text.Trim(),
+            DeviceName = string.IsNullOrWhiteSpace(DeviceNameInput.Text)
+                ? Environment.MachineName
+                : DeviceNameInput.Text.Trim(),
             WakePrefix = WakePrefixInput.Text.Trim(),
             CommandPrefixes = prefixes,
             ThemeId = theme.Id,
             OrbColorId = orb.Id,
             NotifyOnComplete = NotifyOnCompleteInput.IsChecked == true,
+            NotifyProactiveMessages = NotifyProactiveInput.IsChecked == true,
+            NotifyErrors = NotifyErrorsInput.IsChecked == true,
+            DoNotDisturb = DoNotDisturbInput.IsChecked == true,
+            LongTaskThresholdSeconds = ParseThreshold(LongTaskThresholdInput.Text),
+            AutoReconnectProtocol = true,
             StartWithWindows = StartWithWindowsInput.IsChecked == true,
             KeepPopupTopmost = KeepTopmostInput.IsChecked == true,
             OrbSnapToEdge = OrbSnapInput.IsChecked == true,
@@ -236,13 +260,22 @@ public partial class SettingsWindow : Window
         return port;
     }
 
+    private static int ParseThreshold(string value)
+    {
+        if (!int.TryParse(value.Trim(), out var seconds) || seconds is < 1 or > 3600)
+        {
+            throw new InvalidOperationException("长任务阈值必须位于 1 到 3600 秒之间。");
+        }
+        return seconds;
+    }
+
     private static string ValidateBaseUrl(string value)
     {
         var normalized = value.Trim().TrimEnd('/');
         if (!Uri.TryCreate(normalized, UriKind.Absolute, out var uri) ||
             (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
         {
-            throw new InvalidOperationException("AstrBot 地址必须是有效的 HTTP 或 HTTPS URL。");
+            throw new InvalidOperationException("AstrBar Protocol 地址必须是有效的 HTTP 或 HTTPS URL。");
         }
         return normalized;
     }

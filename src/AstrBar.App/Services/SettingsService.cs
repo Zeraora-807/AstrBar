@@ -20,7 +20,11 @@ public sealed class SettingsService
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "AstrBar");
         _settingsPath = Path.Combine(_settingsDirectory, "settings.json");
-        Current = Load();
+        Current = Normalize(Load());
+        if (Current.IsInitialized)
+        {
+            Persist(Current);
+        }
     }
 
     public AppSettings Current { get; private set; }
@@ -29,13 +33,8 @@ public sealed class SettingsService
 
     public void Save(AppSettings settings)
     {
-        settings.CommandPrefixes = NormalizePrefixes(settings.CommandPrefixes);
-        Directory.CreateDirectory(_settingsDirectory);
-
-        var temporaryPath = _settingsPath + ".tmp";
-        var json = JsonSerializer.Serialize(settings, JsonOptions);
-        File.WriteAllText(temporaryPath, json);
-        File.Move(temporaryPath, _settingsPath, overwrite: true);
+        Normalize(settings);
+        Persist(settings);
 
         Current = settings;
         SettingsChanged?.Invoke(this, EventArgs.Empty);
@@ -49,6 +48,15 @@ public sealed class SettingsService
         Save(Current);
     }
 
+    private void Persist(AppSettings settings)
+    {
+        Directory.CreateDirectory(_settingsDirectory);
+        var temporaryPath = _settingsPath + ".tmp";
+        var json = JsonSerializer.Serialize(settings, JsonOptions);
+        File.WriteAllText(temporaryPath, json);
+        File.Move(temporaryPath, _settingsPath, overwrite: true);
+    }
+
     private AppSettings Load()
     {
         try
@@ -59,15 +67,54 @@ public sealed class SettingsService
             }
 
             var json = File.ReadAllText(_settingsPath);
-            var settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions)
-                           ?? new AppSettings();
-            settings.CommandPrefixes = NormalizePrefixes(settings.CommandPrefixes);
-            return settings;
+            return JsonSerializer.Deserialize<AppSettings>(json, JsonOptions)
+                   ?? new AppSettings();
         }
         catch
         {
             return new AppSettings();
         }
+    }
+
+    private static AppSettings Normalize(AppSettings settings)
+    {
+        settings.CommandPrefixes = NormalizePrefixes(settings.CommandPrefixes);
+        if (string.IsNullOrWhiteSpace(settings.DeviceId))
+        {
+            settings.DeviceId = $"windows-{Guid.NewGuid():N}";
+        }
+        if (string.IsNullOrWhiteSpace(settings.DeviceName))
+        {
+            settings.DeviceName = Environment.MachineName;
+        }
+
+        if (settings.IsInitialized &&
+            !string.Equals(
+                settings.ProtocolVersion,
+                ProtocolEnvelope.CurrentProtocol,
+                StringComparison.Ordinal))
+        {
+            // v1 replaces WebChat/OpenAPI with the native AstrBar platform adapter.
+            // Reopen the setup wizard so the user supplies the new gateway token.
+            settings.IsInitialized = false;
+        }
+
+        // v0.3.x used 6185 for WebChat. An untouched default is migrated to the
+        // AstrBar Essential gateway default, while user-selected custom ports remain.
+        if (settings.AstrBotRemotePort == 6185 &&
+            settings.LocalForwardPort == 6185 &&
+            settings.BaseUrl.EndsWith(":6185", StringComparison.OrdinalIgnoreCase))
+        {
+            settings.AstrBotRemotePort = 6190;
+            settings.LocalForwardPort = 6190;
+            settings.BaseUrl = "http://127.0.0.1:6190";
+        }
+
+        settings.LongTaskThresholdSeconds = Math.Clamp(
+            settings.LongTaskThresholdSeconds,
+            1,
+            3600);
+        return settings;
     }
 
     private static string[] NormalizePrefixes(IEnumerable<string>? prefixes)

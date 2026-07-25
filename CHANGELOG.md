@@ -1,58 +1,42 @@
 # Changelog
 
-## 0.3.1
+## 1.0.0
 
-### Fixed
+### 通信架构
 
-- 修复主题与悬浮球颜色 ComboBox 暴露 record 类型文本的问题
-- 初始化向导与设置页统一使用显式主题显示模板
+- 从默认 WebChat/OpenAPI 迁移到 AstrBar Protocol v1
+- 新增持久 WebSocket 连接、握手、心跳与指数退避重连
+- 新增 HTTP 附件上传与下载
+- 新增消息 ACK、事件去重、离线投递重放兼容
+- 新增稳定的 user、device、session 和 request 标识
 
-### Changed
+### 消息
 
-- 设置页分页改为圆角胶囊式导航和卡片式内容区域
-- 主题及悬浮球选项增加颜色圆点预览
+- 支持 `Plain`、`Image`、`Record`、`Video`、`File`、`Reply`、`At` 与 `AtAll` 的协议映射
+- 支持 AstrBot 流式 `message.delta` 与最终 `message.complete`
+- 支持 AstrBot 标准主动消息
+- 支持连接状态、输入状态与协议错误显示
 
-## 0.3.0
+### 通知
 
-### Added
+- 新增因果通知路由
+- 区分请求回复与主动消息
+- 新增长任务完成阈值
+- 新增主动消息通知、错误通知和勿扰模式
+- 新增客户端 Presence 上报
 
-- 首次启动初始化向导
-- 服务器公网地址、SSH 登录信息、AstrBot 端口和本地端口配置
-- 内置 SSH 本地端口转发，不再依赖外部终端
-- SSH KeepAlive、断线自动重连和状态提示
-- SSH 主机 SHA256 指纹首次信任与变更拦截
-- 本地附件上传到 AstrBot OpenAPI
-- 图片缩略图、多选文件与拖拽添加
-- 图片、音频、视频、文件四种上传消息部件
-- 6 套窗口配色
-- 7 种悬浮球颜色，包括跟随主题
-- 设置窗口中的连接、聊天、外观和系统分页
+### 设置与安全
 
-### Changed
+- 首次启动改为填写 AstrBar Essential Token
+- 默认网关端口改为 6190
+- 新增 device_id 与设备名称
+- Protocol Token 保存到 `protocol-token.bin`
+- 保留 DPAPI、SSH 主机指纹校验和内置隧道
+- v0.3.x 配置自动进入迁移向导
 
-- 设置、API Key 和 SSH 密码统一存放在 `%LOCALAPPDATA%\AstrBar`
-- `AstrBotClient` 同时负责文件上传、聊天 SSE 与连接权限测试
-- 主题资源改为动态资源，切换后现有窗口和消息立即更新
-- v0.2.0 用户首次启动 v0.3.0 时执行一次初始化迁移
+### 保留功能
 
-### Security
-
-- API Key 与 SSH 密码使用 Windows DPAPI `CurrentUser` 分别加密
-- SSH 密码不会写入 `settings.json` 或程序目录
-- 保存新的连接设置前先尝试建立隧道，失败时保留上一次有效配置
-- SSH 主机指纹发生变化时拒绝连接
-- 文件名由 AstrBot 服务端和客户端共同净化，附件不会自动执行
-
-## 0.2.0
-
-### Added
-
-- AstrBot 图片、音频、文件和视频响应
-- 附件下载与本地缓存
-- 图片内嵌预览窗口
-- 插件命令自动路由
-- 自动 / 对话 / 命令发送模式
-- 可拖动悬浮圆球
-- 边缘吸附、位置保存和未读红点
-- `IClientEventSource` 提醒扩展接口
-- chat + file scope 测试
+- 多主题与独立悬浮球配色
+- 托盘、悬浮球、快捷键
+- 图片预览、附件上传、下载与保存
+- 自动、对话、命令三种发送模式

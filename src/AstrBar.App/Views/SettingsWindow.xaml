@@ -70,7 +70,7 @@
                             </StackPanel>
 
                             <StackPanel Grid.Row="2">
-                                <TextBlock Text="AstrBot 服务器端口" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="AstrBar Protocol 服务器端口" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBox x:Name="RemotePortInput" Margin="0,6,0,12"/>
                             </StackPanel>
                             <StackPanel Grid.Row="2" Grid.Column="2">
@@ -108,12 +108,12 @@
                         </Grid>
 
                         <StackPanel x:Name="DirectSettingsPanel" Visibility="Collapsed">
-                            <TextBlock Text="AstrBot 地址" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="AstrBar Protocol 地址" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBox x:Name="BaseUrlInput" Margin="0,6,0,12"/>
                         </StackPanel>
 
                         <TextBlock Margin="0,16,0,0"
-                                   Text="API Key（需要 chat 与 file scope）"
+                                   Text="AstrBar Protocol Token"
                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <PasswordBox x:Name="ApiKeyInput" Margin="0,6,0,12"/>
 
@@ -121,7 +121,7 @@
                                 Width="150"
                                 HorizontalAlignment="Left"
                                 Click="TestButton_Click"
-                                Content="测试并重连"/>
+                                Content="测试连接"/>
                         <TextBlock x:Name="TestStatusText"
                                    Margin="0,10,0,0"
                                    TextWrapping="Wrap"
@@ -140,12 +140,28 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="username" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="user_id" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBox x:Name="UsernameInput" Margin="0,6,0,14"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="session_id" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBox x:Name="SessionIdInput" Margin="0,6,0,14"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="device_name" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBox x:Name="DeviceNameInput" Margin="0,6,0,14"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="device_id" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBox x:Name="DeviceIdInput" Margin="0,6,0,14"/>
                             </StackPanel>
                         </Grid>
 
@@ -194,7 +210,24 @@
                 <StackPanel Margin="14">
                     <CheckBox x:Name="NotifyOnCompleteInput"
                               Margin="0,5"
-                              Content="窗口未激活时，用 Windows 通知提示回复完成"/>
+                              Content="窗口未激活时，通知当前请求已经完成"/>
+                    <CheckBox x:Name="NotifyProactiveInput"
+                              Margin="0,5"
+                              Content="第三方插件通过标准主动消息发送时显示通知"/>
+                    <CheckBox x:Name="NotifyErrorsInput"
+                              Margin="0,5"
+                              Content="协议错误和后台连接故障显示通知"/>
+                    <CheckBox x:Name="DoNotDisturbInput"
+                              Margin="0,5"
+                              Content="勿扰模式（仍接收消息，但不弹 Windows 通知）"/>
+                    <StackPanel Margin="0,12,0,8">
+                        <TextBlock Text="长任务通知阈值（秒）"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBox x:Name="LongTaskThresholdInput"
+                                 Width="120"
+                                 Margin="0,6,0,0"
+                                 HorizontalAlignment="Left"/>
+                    </StackPanel>
                     <CheckBox x:Name="StartWithWindowsInput"
                               Margin="0,5"
                               Content="登录 Windows 时自动启动 AstrBar"/>
@@ -202,7 +235,7 @@
                             Padding="12"
                             CornerRadius="10"
                             Background="{DynamicResource AccentSoftBrush}">
-                        <TextBlock Text="配置文件位于 LocalAppData\AstrBar。API Key 与 SSH 密码使用 Windows DPAPI 加密，不保存在程序文件夹。"
+                        <TextBlock Text="配置文件位于 LocalAppData\AstrBar。Protocol Token 与 SSH 密码使用 Windows DPAPI 加密，不保存在程序文件夹。"
                                    TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </Border>

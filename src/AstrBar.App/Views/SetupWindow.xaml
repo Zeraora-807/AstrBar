@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="AstrBar 初始设置"
         Width="650"
-        Height="965"
+        Height="800"
         MinHeight="650"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResize"
@@ -28,12 +28,12 @@
                            FontSize="25"/>
             </Border>
             <TextBlock Margin="0,14,0,0"
-                       Text="Nice to meet you - AstrBar"
-                       FontFamily="Century Bold, Microsoft YaHei UI"
+                       Text="第一次见面，先把路搭好"
+                       FontFamily="Segoe UI Semibold, Microsoft YaHei UI"
                        FontSize="25"
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
             <TextBlock Margin="0,6,0,0"
-                       Text="AstrBar 的初始设置。"
+                       Text="AstrBar 会在后台建立 SSH 隧道。以后启动时不再需要额外打开终端。"
                        TextWrapping="Wrap"
                        Foreground="{DynamicResource TextSecondaryBrush}"/>
         </StackPanel>
@@ -92,12 +92,12 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="AstrBot 服务器端口" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                <TextBox x:Name="RemotePortInput" Margin="0,6,0,0" Text="6185"/>
+                                <TextBlock Text="AstrBar Protocol 服务器端口" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBox x:Name="RemotePortInput" Margin="0,6,0,0" Text="6190"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="本地转发端口" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                <TextBox x:Name="LocalPortInput" Margin="0,6,0,0" Text="6185"/>
+                                <TextBox x:Name="LocalPortInput" Margin="0,6,0,0" Text="6190"/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
@@ -110,12 +110,12 @@
                         BorderBrush="{DynamicResource BorderBrush}"
                         BorderThickness="1">
                     <StackPanel>
-                        <TextBlock Text="AstrBot 身份"
+                        <TextBlock Text="AstrBar Protocol 身份"
                                    FontSize="16"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
                         <TextBlock Margin="0,12,0,0"
-                                   Text="OpenAPI Key（需要 chat 与 file scope）"
+                                   Text="连接令牌（与 AstrBar Essential 平台配置中的 token 一致）"
                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <PasswordBox x:Name="ApiKeyInput" Margin="0,6,0,0"/>
 
@@ -126,12 +126,28 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="username" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="user_id" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBox x:Name="UsernameInput" Margin="0,6,0,0" Text="astrbar-local"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="session_id" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBox x:Name="SessionIdInput" Margin="0,6,0,0" Text="astrbar-main"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="device_name" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBox x:Name="DeviceNameInput" Margin="0,6,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="device_id" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBox x:Name="DeviceIdInput" Margin="0,6,0,0"/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
@@ -172,7 +188,7 @@
                         Padding="12"
                         CornerRadius="10"
                         Background="{DynamicResource AccentSoftBrush}">
-                    <TextBlock Text="密码与 API Key 会加密保存到 LocalAppData，不会写进程序目录。首次连接会记录 SSH 主机指纹。"
+                    <TextBlock Text="SSH 密码与 Protocol Token 会使用 Windows 当前用户的 DPAPI 加密，并保存到 LocalAppData，不会写进程序目录。首次连接会记录 SSH 主机指纹，之后若指纹变化将拒绝连接。"
                                TextWrapping="Wrap"
                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                 </Border>

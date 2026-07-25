@@ -17,7 +17,7 @@ public partial class ChatPopupWindow : Window, IDisposable
     private readonly SettingsService _settingsService;
     private readonly CredentialService _credentialService;
     private readonly StartupService _startupService;
-    private readonly AstrBotClient _astrBotClient;
+    private readonly AstrBarProtocolClient _protocolClient;
     private readonly AttachmentService _attachmentService;
     private readonly NotificationService _notificationService;
     private readonly SshTunnelService _sshTunnelService;
@@ -35,7 +35,7 @@ public partial class ChatPopupWindow : Window, IDisposable
         SettingsService settingsService,
         CredentialService credentialService,
         StartupService startupService,
-        AstrBotClient astrBotClient,
+        AstrBarProtocolClient protocolClient,
         AttachmentService attachmentService,
         NotificationService notificationService,
         SshTunnelService sshTunnelService,
@@ -46,7 +46,7 @@ public partial class ChatPopupWindow : Window, IDisposable
         _settingsService = settingsService;
         _credentialService = credentialService;
         _startupService = startupService;
-        _astrBotClient = astrBotClient;
+        _protocolClient = protocolClient;
         _attachmentService = attachmentService;
         _notificationService = notificationService;
         _sshTunnelService = sshTunnelService;
@@ -56,9 +56,16 @@ public partial class ChatPopupWindow : Window, IDisposable
         PendingAttachmentsList.ItemsSource = _pendingUploads;
         Topmost = _settingsService.Current.KeepPopupTopmost;
         _sshTunnelService.StatusChanged += SshTunnelService_StatusChanged;
-        StatusText.Text = _sshTunnelService.IsRunning
-            ? "SSH 隧道已连接"
-            : "就绪 · Ctrl + Alt + Space 呼出";
+        _protocolClient.ConnectionStatusChanged += ProtocolClient_ConnectionStatusChanged;
+        _protocolClient.ProactiveMessageReceived += ProtocolClient_ProactiveMessageReceived;
+        Activated += Window_Activated;
+        Deactivated += Window_Deactivated;
+        IsVisibleChanged += Window_IsVisibleChanged;
+        StatusText.Text = _protocolClient.IsConnected
+            ? "AstrBar Protocol 已连接"
+            : (_sshTunnelService.IsRunning
+                ? "SSH 隧道已连接，协议正在连接…"
+                : "就绪 · Ctrl + Alt + Space 呼出");
     }
 
     public event EventHandler? CollapseToOrbRequested;
@@ -70,6 +77,134 @@ public partial class ChatPopupWindow : Window, IDisposable
         _ = Dispatcher.InvokeAsync(() => StatusText.Text = e.Status);
     }
 
+    private void ProtocolClient_ConnectionStatusChanged(
+        object? sender,
+        ProtocolConnectionStatusEventArgs e)
+    {
+        _ = Dispatcher.InvokeAsync(() => StatusText.Text = e.Status);
+    }
+
+    private void ProtocolClient_ProactiveMessageReceived(
+        object? sender,
+        ProtocolMessageEventArgs e)
+    {
+        _ = Dispatcher.InvokeAsync(async () =>
+        {
+            EmptyHint.Visibility = Visibility.Collapsed;
+            var assistant = ChatMessage.Assistant();
+            _messages.Add(assistant);
+
+            foreach (var part in e.Message.Parts)
+            {
+                switch (part.Type)
+                {
+                    case "text":
+                        assistant.GetOrCreateTextPart().Append(part.Text);
+                        break;
+                    case "image":
+                    case "audio":
+                    case "record":
+                    case "video":
+                    case "file":
+                    {
+                        var attachment = CreateAttachmentPart(part.Type, part.FileName);
+                        attachment.AttachmentId = part.AttachmentId;
+                        attachment.State = AttachmentLoadState.ReadyToDownload;
+                        attachment.StatusText = attachment.IsImage
+                            ? "正在加载图片…"
+                            : "已准备好，可下载";
+                        assistant.Parts.Add(attachment);
+                        if (attachment.IsImage)
+                        {
+                            try
+                            {
+                                await EnsureAttachmentDownloadedAsync(attachment);
+                            }
+                            catch
+                            {
+                                attachment.StatusText = "下载失败，点击重试";
+                            }
+                        }
+                        break;
+                    }
+                    case "reply":
+                        assistant.GetOrCreateTextPart().Append(
+                            string.IsNullOrWhiteSpace(part.Text)
+                                ? "[引用消息]\n"
+                                : $"[引用：{part.Text}]\n");
+                        break;
+                    case "mention":
+                        assistant.GetOrCreateTextPart().Append(
+                            $"@{(string.IsNullOrWhiteSpace(part.Name) ? part.UserId : part.Name)} ");
+                        break;
+                    case "mention_all":
+                        assistant.GetOrCreateTextPart().Append("@所有人 ");
+                        break;
+                }
+            }
+
+            CleanAssistantMessage(assistant);
+            if (!assistant.HasDisplayableContent)
+            {
+                assistant.Parts.Add(new TextMessagePart("收到一条 AstrBot 主动消息。"));
+            }
+
+            if (!IsActive)
+            {
+                UnreadReplyAvailable?.Invoke(this, EventArgs.Empty);
+            }
+
+            var settings = _settingsService.Current;
+            if (e.Message.IsProactive &&
+                settings.NotifyProactiveMessages &&
+                !settings.DoNotDisturb &&
+                !IsActive)
+            {
+                _notificationService.Show(
+                    "AstrBot 主动消息",
+                    BuildNotificationPreview(assistant),
+                    e.Message.SessionId);
+            }
+
+            StatusText.Text = e.Message.IsProactive
+                ? "收到主动消息"
+                : "收到后台消息";
+            ScrollToBottom();
+        });
+    }
+
+    private void Window_Activated(object? sender, EventArgs e)
+    {
+        _ = ReportPresenceAsync();
+    }
+
+    private void Window_Deactivated(object? sender, EventArgs e)
+    {
+        _ = ReportPresenceAsync();
+    }
+
+    private void Window_IsVisibleChanged(
+        object sender,
+        DependencyPropertyChangedEventArgs e)
+    {
+        _ = ReportPresenceAsync();
+    }
+
+    private async Task ReportPresenceAsync()
+    {
+        try
+        {
+            await _protocolClient.UpdatePresenceAsync(
+                IsVisible,
+                IsActive,
+                _settingsService.Current.DoNotDisturb);
+        }
+        catch
+        {
+            // Presence is advisory and must never interrupt the chat UI.
+        }
+    }
+
     public void RefreshSettings()
     {
         Topmost = _settingsService.Current.KeepPopupTopmost;
@@ -77,6 +212,7 @@ public partial class ChatPopupWindow : Window, IDisposable
         {
             message.RefreshTheme();
         }
+        _ = ReportPresenceAsync();
     }
 
     public void ShowNearTray()
@@ -164,12 +300,12 @@ public partial class ChatPopupWindow : Window, IDisposable
             return;
         }
 
-        var apiKey = _credentialService.LoadApiKey();
-        if (string.IsNullOrWhiteSpace(apiKey))
+        var protocolToken = _credentialService.LoadProtocolToken();
+        if (string.IsNullOrWhiteSpace(protocolToken))
         {
             MessageBox.Show(
                 this,
-                "请先在设置中填写 AstrBot API Key。",
+                "请先在设置中填写 AstrBar Protocol Token。",
                 "AstrBar",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
@@ -182,6 +318,7 @@ public partial class ChatPopupWindow : Window, IDisposable
         _messages.Add(ChatMessage.User(text, uploads));
 
         var assistant = ChatMessage.Assistant();
+        int? responseElapsedMilliseconds = null;
         _messages.Add(assistant);
         MessageInput.Clear();
         _pendingUploads.Clear();
@@ -208,9 +345,9 @@ public partial class ChatPopupWindow : Window, IDisposable
                 upload.IsUploading = true;
                 upload.StatusText = "正在上传…";
                 StatusText.Text = $"正在上传：{upload.FileName}";
-                var uploaded = await _astrBotClient.UploadFileAsync(
+                var uploaded = await _protocolClient.UploadFileAsync(
                     _settingsService.Current,
-                    apiKey,
+                    protocolToken,
                     upload,
                     _requestCancellation.Token);
                 uploadedAttachments.Add(uploaded);
@@ -218,10 +355,10 @@ public partial class ChatPopupWindow : Window, IDisposable
                 upload.StatusText = "已上传";
             }
 
-            StatusText.Text = "正在连接 AstrBot…";
-            await foreach (var chunk in _astrBotClient.StreamChatAsync(
+            StatusText.Text = "正在通过 AstrBar Protocol 发送…";
+            await foreach (var chunk in _protocolClient.StreamChatAsync(
                                _settingsService.Current,
-                               apiKey,
+                               protocolToken,
                                text,
                                sendMode,
                                uploadedAttachments,
@@ -300,6 +437,10 @@ public partial class ChatPopupWindow : Window, IDisposable
                         StatusText.Text = $"会话：{chunk.Value}";
                         break;
 
+                    case ChatStreamChunkKind.Metadata:
+                        responseElapsedMilliseconds = chunk.ElapsedMilliseconds;
+                        break;
+
                     case ChatStreamChunkKind.End:
                         StatusText.Text = "完成";
                         break;
@@ -318,10 +459,19 @@ public partial class ChatPopupWindow : Window, IDisposable
                 UnreadReplyAvailable?.Invoke(this, EventArgs.Empty);
             }
 
-            if (_settingsService.Current.NotifyOnComplete && !IsActive)
+            if (_settingsService.Current.NotifyOnComplete &&
+                !_settingsService.Current.DoNotDisturb &&
+                !IsActive)
             {
+                var thresholdMilliseconds =
+                    _settingsService.Current.LongTaskThresholdSeconds * 1000;
+                var isLongTask = responseElapsedMilliseconds.HasValue &&
+                                 responseElapsedMilliseconds.Value >= thresholdMilliseconds;
+                var title = isLongTask
+                    ? "AstrBot 后台任务已完成"
+                    : "AstrBot 已完成回复";
                 _notificationService.Show(
-                    "AstrBot 已完成回复",
+                    title,
                     BuildNotificationPreview(assistant),
                     _settingsService.Current.SessionId);
             }
@@ -341,10 +491,14 @@ public partial class ChatPopupWindow : Window, IDisposable
             assistant.Parts.Add(new TextMessagePart($"连接失败：{ex.Message}"));
             StatusText.Text = "发生错误";
 
-            _notificationService.Show(
-                "AstrBar 连接失败",
-                ex.Message,
-                _settingsService.Current.SessionId);
+            if (_settingsService.Current.NotifyErrors &&
+                !_settingsService.Current.DoNotDisturb)
+            {
+                _notificationService.Show(
+                    "AstrBar 连接失败",
+                    ex.Message,
+                    _settingsService.Current.SessionId);
+            }
         }
         finally
         {
@@ -443,10 +597,10 @@ public partial class ChatPopupWindow : Window, IDisposable
             throw new InvalidOperationException("附件尚未获得 attachment_id。");
         }
 
-        var apiKey = _credentialService.LoadApiKey();
-        if (string.IsNullOrWhiteSpace(apiKey))
+        var protocolToken = _credentialService.LoadProtocolToken();
+        if (string.IsNullOrWhiteSpace(protocolToken))
         {
-            throw new InvalidOperationException("未配置 AstrBot API Key。");
+            throw new InvalidOperationException("未配置 AstrBar Protocol Token。");
         }
 
         attachment.State = AttachmentLoadState.Downloading;
@@ -456,7 +610,7 @@ public partial class ChatPopupWindow : Window, IDisposable
         {
             attachment.LocalPath = await _attachmentService.DownloadAsync(
                 _settingsService.Current.BaseUrl,
-                apiKey,
+                protocolToken,
                 attachment.AttachmentId,
                 attachment.RemoteName,
                 cancellationToken);
@@ -721,7 +875,7 @@ public partial class ChatPopupWindow : Window, IDisposable
             _settingsService,
             _credentialService,
             _startupService,
-            _astrBotClient,
+            _protocolClient,
             _sshTunnelService,
             _themeService)
         {
@@ -780,6 +934,11 @@ public partial class ChatPopupWindow : Window, IDisposable
         _requestCancellation?.Dispose();
         _hotkeyService?.Dispose();
         _sshTunnelService.StatusChanged -= SshTunnelService_StatusChanged;
+        _protocolClient.ConnectionStatusChanged -= ProtocolClient_ConnectionStatusChanged;
+        _protocolClient.ProactiveMessageReceived -= ProtocolClient_ProactiveMessageReceived;
+        Activated -= Window_Activated;
+        Deactivated -= Window_Deactivated;
+        IsVisibleChanged -= Window_IsVisibleChanged;
         _attachmentService.Dispose();
         Close();
     }

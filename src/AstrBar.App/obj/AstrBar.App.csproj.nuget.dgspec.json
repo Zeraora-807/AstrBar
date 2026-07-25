@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Genarch\\Documents\\Code\\AstrBar-v0.3.1\\src\\AstrBar.App\\AstrBar.App.csproj": {}
+    "C:\\Users\\Genarch\\Documents\\Code\\AstrBar-v1.0.0-source\\src\\AstrBar.App\\AstrBar.App.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Genarch\\Documents\\Code\\AstrBar-v0.3.1\\src\\AstrBar.App\\AstrBar.App.csproj": {
-      "version": "0.3.1",
+    "C:\\Users\\Genarch\\Documents\\Code\\AstrBar-v1.0.0-source\\src\\AstrBar.App\\AstrBar.App.csproj": {
+      "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Genarch\\Documents\\Code\\AstrBar-v0.3.1\\src\\AstrBar.App\\AstrBar.App.csproj",
+        "projectUniqueName": "C:\\Users\\Genarch\\Documents\\Code\\AstrBar-v1.0.0-source\\src\\AstrBar.App\\AstrBar.App.csproj",
         "projectName": "AstrBar",
-        "projectPath": "C:\\Users\\Genarch\\Documents\\Code\\AstrBar-v0.3.1\\src\\AstrBar.App\\AstrBar.App.csproj",
+        "projectPath": "C:\\Users\\Genarch\\Documents\\Code\\AstrBar-v1.0.0-source\\src\\AstrBar.App\\AstrBar.App.csproj",
         "packagesPath": "C:\\Users\\Genarch\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Genarch\\Documents\\Code\\AstrBar-v0.3.1\\src\\AstrBar.App\\obj\\",
+        "outputPath": "C:\\Users\\Genarch\\Documents\\Code\\AstrBar-v1.0.0-source\\src\\AstrBar.App\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

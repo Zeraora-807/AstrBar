@@ -1,75 +1,99 @@
 param(
-    [string]$BaseUrl = "http://127.0.0.1:6185",
+    [string]$BaseUrl = "http://127.0.0.1:6190",
 
     [Parameter(Mandatory = $true)]
-    [string]$ApiKey,
+    [string]$Token,
 
-    [string]$SessionId = "astrbar-connectivity-test",
-
-    [string]$Username = "astrbar-local",
-
-    [string]$WakePrefix = ""
+    [string]$UserId = "astrbar-test",
+    [string]$DeviceId = "astrbar-powershell-probe"
 )
 
 $ErrorActionPreference = "Stop"
-$BaseUrl = $BaseUrl.TrimEnd("/")
+$headers = @{ Authorization = "Bearer $Token" }
+$root = $BaseUrl.TrimEnd('/')
 
-Write-Host "Testing OpenAPI endpoint..." -ForegroundColor Cyan
-Invoke-WebRequest `
-    -Uri "$BaseUrl/api/v1/openapi.json" `
-    -Headers @{ Authorization = "Bearer $ApiKey" } `
-    -UseBasicParsing | Out-Null
-Write-Host "OpenAPI endpoint is reachable." -ForegroundColor Green
+Write-Host "[1/2] Testing management state endpoint..." -ForegroundColor Cyan
+$state = Invoke-RestMethod `
+    -Method Get `
+    -Uri "$root/astrbar/v1/state" `
+    -Headers $headers
+Write-Host "State endpoint OK." -ForegroundColor Green
 
-Write-Host "Testing file scope..." -ForegroundColor Cyan
+Write-Host "[2/2] Testing AstrBar Protocol WebSocket handshake..." -ForegroundColor Cyan
+$uri = [Uri]$root
+$scheme = if ($uri.Scheme -eq "https") { "wss" } else { "ws" }
+$wsUri = [Uri]::new("${scheme}://$($uri.Authority)/astrbar/v1/ws")
+
+$socket = [System.Net.WebSockets.ClientWebSocket]::new()
+$socket.Options.SetRequestHeader("Authorization", "Bearer $Token")
+$cts = [System.Threading.CancellationTokenSource]::new([TimeSpan]::FromSeconds(15))
+
 try {
-    Invoke-WebRequest `
-        -Uri "$BaseUrl/api/v1/file?attachment_id=astrbar-scope-probe" `
-        -Headers @{ Authorization = "Bearer $ApiKey" } `
-        -UseBasicParsing | Out-Null
-    Write-Host "File endpoint is reachable. The probe attachment is intentionally nonexistent." -ForegroundColor Green
-}
-catch {
-    throw "file scope test failed: $($_.Exception.Message)"
-}
+    $socket.ConnectAsync($wsUri, $cts.Token).GetAwaiter().GetResult()
 
-$payload = @{
-    username = $Username
-    session_id = $SessionId
-    message = @(
-        @{
-            type = "plain"
-            text = $(if ([string]::IsNullOrWhiteSpace($WakePrefix)) {
-                "Reply exactly with: AstrBar connection successful"
-            } else {
-                "$($WakePrefix.Trim()) Reply exactly with: AstrBar connection successful"
-            })
+    $hello = @{
+        protocol = "astrbar/1.0"
+        id = "hello_$([Guid]::NewGuid().ToString('N'))"
+        type = "client.hello"
+        timestamp = [DateTimeOffset]::UtcNow.ToString("O")
+        user_id = $UserId
+        device_id = "$DeviceId-$([Guid]::NewGuid().ToString('N'))"
+        requires_ack = $false
+        sequence = 1
+        payload = @{
+            device_id = "$DeviceId-$([Guid]::NewGuid().ToString('N'))"
+            device_name = "PowerShell Protocol Probe"
+            user_id = $UserId
+            client_version = "1.0.0-script"
+            sessions = @()
+            capabilities = @("delivery.ack")
+            presence = @{
+                window_visible = $false
+                window_focused = $false
+                do_not_disturb = $true
+            }
         }
-    )
-    flags = @{
-        enable_inline_genui = $true
-        enable_default_system_prompt = $true
-        enable_streaming = $true
     }
-}
+    # Envelope and payload device IDs must match.
+    $hello.payload.device_id = $hello.device_id
+    $bytes = [Text.Encoding]::UTF8.GetBytes(($hello | ConvertTo-Json -Depth 8 -Compress))
+    $segment = [ArraySegment[byte]]::new($bytes)
+    $socket.SendAsync(
+        $segment,
+        [System.Net.WebSockets.WebSocketMessageType]::Text,
+        $true,
+        $cts.Token
+    ).GetAwaiter().GetResult()
 
-$body = $payload | ConvertTo-Json -Depth 10 -Compress
-$tempFile = Join-Path ([System.IO.Path]::GetTempPath()) ("astrbar-chat-{0}.json" -f [Guid]::NewGuid())
+    $buffer = New-Object byte[] 65536
+    $stream = [IO.MemoryStream]::new()
+    do {
+        $result = $socket.ReceiveAsync(
+            [ArraySegment[byte]]::new($buffer),
+            $cts.Token
+        ).GetAwaiter().GetResult()
+        if ($result.MessageType -eq [System.Net.WebSockets.WebSocketMessageType]::Close) {
+            throw "Gateway closed before server.welcome."
+        }
+        $stream.Write($buffer, 0, $result.Count)
+    } while (-not $result.EndOfMessage)
 
-try {
-    # PowerShell 5.1 may strip JSON quotes when a JSON string is passed directly
-    # to a native executable. Writing the body to a UTF-8 file avoids that issue.
-    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    [System.IO.File]::WriteAllText($tempFile, $body, $utf8NoBom)
-
-    Write-Host "`nTesting Chat SSE..." -ForegroundColor Cyan
-    curl.exe -N `
-        "$BaseUrl/api/v1/chat" `
-        -H "Authorization: Bearer $ApiKey" `
-        -H "Accept: text/event-stream" `
-        -H "Content-Type: application/json" `
-        --data-binary "@$tempFile"
+    $json = [Text.Encoding]::UTF8.GetString($stream.ToArray()) | ConvertFrom-Json
+    if ($json.type -ne "server.welcome") {
+        throw "Expected server.welcome, received $($json.type)."
+    }
+    Write-Host "Handshake OK. Server version: $($json.payload.server_version)" -ForegroundColor Green
 }
 finally {
-    Remove-Item -LiteralPath $tempFile -Force -ErrorAction SilentlyContinue
+    if ($socket.State -eq [System.Net.WebSockets.WebSocketState]::Open) {
+        $socket.CloseAsync(
+            [System.Net.WebSockets.WebSocketCloseStatus]::NormalClosure,
+            "probe complete",
+            [Threading.CancellationToken]::None
+        ).GetAwaiter().GetResult()
+    }
+    $socket.Dispose()
+    $cts.Dispose()
 }
+
+Write-Host "AstrBar Essential state and protocol handshake are available." -ForegroundColor Green

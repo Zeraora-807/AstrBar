@@ -9,7 +9,7 @@ public partial class SetupWindow : Window
 {
     private readonly SettingsService _settingsService;
     private readonly CredentialService _credentialService;
-    private readonly AstrBotClient _astrBotClient;
+    private readonly AstrBarProtocolClient _protocolClient;
     private readonly SshTunnelService _sshTunnelService;
     private readonly ThemeService _themeService;
     private string _verifiedFingerprint = string.Empty;
@@ -17,14 +17,14 @@ public partial class SetupWindow : Window
     public SetupWindow(
         SettingsService settingsService,
         CredentialService credentialService,
-        AstrBotClient astrBotClient,
+        AstrBarProtocolClient protocolClient,
         SshTunnelService sshTunnelService,
         ThemeService themeService)
     {
         InitializeComponent();
         _settingsService = settingsService;
         _credentialService = credentialService;
-        _astrBotClient = astrBotClient;
+        _protocolClient = protocolClient;
         _sshTunnelService = sshTunnelService;
         _themeService = themeService;
 
@@ -42,9 +42,11 @@ public partial class SetupWindow : Window
         SshPasswordInput.Password = _credentialService.LoadSshPassword();
         RemotePortInput.Text = settings.AstrBotRemotePort.ToString();
         LocalPortInput.Text = settings.LocalForwardPort.ToString();
-        ApiKeyInput.Password = _credentialService.LoadApiKey();
+        ApiKeyInput.Password = _credentialService.LoadProtocolToken();
         UsernameInput.Text = settings.Username;
         SessionIdInput.Text = settings.SessionId;
+        DeviceNameInput.Text = settings.DeviceName;
+        DeviceIdInput.Text = settings.DeviceId;
         _verifiedFingerprint = settings.SshHostKeyFingerprint;
         ThemeInput.SelectedItem = _themeService.GetTheme(settings.ThemeId);
         OrbColorInput.SelectedItem = _themeService.GetOrbColor(settings.OrbColorId);
@@ -66,15 +68,14 @@ public partial class SetupWindow : Window
             candidate.SshHostKeyFingerprint = _verifiedFingerprint;
             candidate.BaseUrl = $"http://127.0.0.1:{tunnel.LocalPort}";
 
-            StatusText.Text = "SSH 隧道已建立，正在检查 AstrBot OpenAPI…";
-            await _astrBotClient.TestConnectionAsync(
-                candidate.BaseUrl,
-                ApiKeyInput.Password,
-                candidate.Username);
+            StatusText.Text = "SSH 隧道已建立，正在进行 AstrBar Protocol 握手…";
+            await _protocolClient.TestConnectionAsync(
+                candidate,
+                ApiKeyInput.Password);
 
             candidate.IsInitialized = true;
             _credentialService.SaveSshPassword(SshPasswordInput.Password);
-            _credentialService.SaveApiKey(ApiKeyInput.Password);
+            _credentialService.SaveProtocolToken(ApiKeyInput.Password);
             _settingsService.Save(candidate);
             _themeService.Apply(candidate);
 
@@ -108,16 +109,17 @@ public partial class SetupWindow : Window
         }
         if (string.IsNullOrWhiteSpace(ApiKeyInput.Password))
         {
-            throw new InvalidOperationException("请填写 AstrBot API Key。");
+            throw new InvalidOperationException("请填写 AstrBar Protocol Token。");
         }
         if (string.IsNullOrWhiteSpace(UsernameInput.Text) ||
-            string.IsNullOrWhiteSpace(SessionIdInput.Text))
+            string.IsNullOrWhiteSpace(SessionIdInput.Text) ||
+            string.IsNullOrWhiteSpace(DeviceIdInput.Text))
         {
-            throw new InvalidOperationException("username 与 session_id 不能为空。");
+            throw new InvalidOperationException("user_id、session_id 与 device_id 不能为空。");
         }
 
         var sshPort = ParsePort(SshPortInput.Text, "SSH 端口");
-        var remotePort = ParsePort(RemotePortInput.Text, "AstrBot 端口");
+        var remotePort = ParsePort(RemotePortInput.Text, "AstrBar Protocol 端口");
         var localPort = ParsePort(LocalPortInput.Text, "本地端口");
         var old = _settingsService.Current;
         var theme = ThemeInput.SelectedItem as ThemeOption ?? _themeService.Themes[0];
@@ -125,6 +127,7 @@ public partial class SetupWindow : Window
 
         return new AppSettings
         {
+            ProtocolVersion = ProtocolEnvelope.CurrentProtocol,
             IsInitialized = true,
             UseEmbeddedSshTunnel = true,
             SshHost = SshHostInput.Text.Trim(),
@@ -138,11 +141,20 @@ public partial class SetupWindow : Window
             BaseUrl = $"http://127.0.0.1:{localPort}",
             Username = UsernameInput.Text.Trim(),
             SessionId = SessionIdInput.Text.Trim(),
+            DeviceId = DeviceIdInput.Text.Trim(),
+            DeviceName = string.IsNullOrWhiteSpace(DeviceNameInput.Text)
+                ? Environment.MachineName
+                : DeviceNameInput.Text.Trim(),
             WakePrefix = old.WakePrefix,
             CommandPrefixes = old.CommandPrefixes ?? ["/"],
             ThemeId = theme.Id,
             OrbColorId = orb.Id,
             NotifyOnComplete = old.NotifyOnComplete,
+            NotifyProactiveMessages = old.NotifyProactiveMessages,
+            NotifyErrors = old.NotifyErrors,
+            DoNotDisturb = old.DoNotDisturb,
+            LongTaskThresholdSeconds = old.LongTaskThresholdSeconds,
+            AutoReconnectProtocol = true,
             StartWithWindows = old.StartWithWindows,
             KeepPopupTopmost = old.KeepPopupTopmost,
             OrbSnapToEdge = old.OrbSnapToEdge,

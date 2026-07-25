@@ -19,7 +19,7 @@ public sealed class AttachmentService : IDisposable
 
     public async Task<string> DownloadAsync(
         string baseUrl,
-        string apiKey,
+        string token,
         string attachmentId,
         string suggestedName,
         CancellationToken cancellationToken = default)
@@ -35,9 +35,9 @@ public sealed class AttachmentService : IDisposable
             HttpMethod.Get,
             BuildUri(
                 baseUrl,
-                $"api/v1/file?attachment_id={Uri.EscapeDataString(attachmentId)}"));
+                $"astrbar/v1/attachments/{Uri.EscapeDataString(attachmentId)}"));
         request.Headers.Authorization =
-            new AuthenticationHeaderValue("Bearer", apiKey.Trim());
+            new AuthenticationHeaderValue("Bearer", token.Trim());
 
         using var response = await _httpClient.SendAsync(
             request,
@@ -155,7 +155,7 @@ public sealed class AttachmentService : IDisposable
     {
         if (!Uri.TryCreate(baseUrl.TrimEnd('/') + "/", UriKind.Absolute, out var root))
         {
-            throw new InvalidOperationException("AstrBot 地址不是有效 URL。");
+            throw new InvalidOperationException("AstrBar Protocol 地址不是有效 URL。");
         }
 
         return new Uri(root, relativePath);

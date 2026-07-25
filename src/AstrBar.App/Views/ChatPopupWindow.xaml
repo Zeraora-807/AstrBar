@@ -133,17 +133,17 @@
                         <StackPanel Grid.Column="2" VerticalAlignment="Center">
                             <Button Margin="0,0,0,4"
                                     Padding="9,5"
-                                    Content="Download"
+                                    Content="下载"
                                     Visibility="{Binding CanDownload, Converter={StaticResource BoolToVisibilityConverter}}"
                                     Click="DownloadAttachment_Click"/>
                             <Button Margin="0,0,0,4"
                                     Padding="9,5"
-                                    Content="Open"
+                                    Content="打开"
                                     Visibility="{Binding CanOpen, Converter={StaticResource BoolToVisibilityConverter}}"
                                     Click="OpenAttachment_Click"/>
                             <Button Padding="9,5"
                                     Style="{StaticResource GhostButtonStyle}"
-                                    Content="Save As"
+                                    Content="另存"
                                     Visibility="{Binding CanOpen, Converter={StaticResource BoolToVisibilityConverter}}"
                                     Click="SaveAttachment_Click"/>
                         </StackPanel>
@@ -230,16 +230,16 @@
                                    FontSize="14"
                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
                         <TextBlock x:Name="StatusText"
-                                   Text="Ready"
+                                   Text="就绪 · Ctrl + Alt + Space 呼出"
                                    FontSize="11"
                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </StackPanel>
                     <StackPanel Grid.Column="2" Orientation="Horizontal">
-                        <Button Style="{StaticResource GhostButtonStyle}" ToolTip="Orb"
+                        <Button Style="{StaticResource GhostButtonStyle}" ToolTip="缩成悬浮球"
                                 Click="CollapseToOrbButton_Click" Content="●" FontSize="12"/>
-                        <Button Style="{StaticResource GhostButtonStyle}" ToolTip="Settings"
+                        <Button Style="{StaticResource GhostButtonStyle}" ToolTip="设置"
                                 Click="SettingsButton_Click" Content="⚙"/>
-                        <Button Style="{StaticResource GhostButtonStyle}" ToolTip="Minimize"
+                        <Button Style="{StaticResource GhostButtonStyle}" ToolTip="隐藏到托盘"
                                 Click="HideButton_Click" Content="×" FontSize="18"/>
                     </StackPanel>
                 </Grid>
@@ -263,12 +263,12 @@
                     </ItemsControl>
                 </ScrollViewer>
                 <TextBlock x:Name="EmptyHint"
-                           Text="What'd you like to talk?"
+                           Text="从这里向服务器上的 AstrBot 发消息。&#x0a;可以拖入图片、文档、音频或视频。"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"
                            TextAlignment="Center"
                            Foreground="{DynamicResource TextSecondaryBrush}"
-                           FontSize="12"
+                           FontSize="13"
                            LineHeight="22"/>
             </Grid>
 
@@ -307,7 +307,7 @@
                                 Margin="0,0,7,0"
                                 VerticalAlignment="Bottom"
                                 Style="{StaticResource GhostButtonStyle}"
-                                ToolTip="Add Attachment"
+                                ToolTip="添加附件"
                                 Click="AttachButton_Click"
                                 Content="＋"
                                 FontSize="20"/>
@@ -318,7 +318,7 @@
                                   VerticalAlignment="Bottom"
                                   SelectedIndex="0"
                                   Style="{StaticResource AstrBarComboBoxStyle}"
-                                  ToolTip="自动:自动识别消息类型">
+                                  ToolTip="自动：插件命令原样发送，普通文字走 LLM">
                             <ComboBoxItem Content="自动"/>
                             <ComboBoxItem Content="对话"/>
                             <ComboBoxItem Content="命令"/>
@@ -332,14 +332,14 @@
                                  BorderThickness="0"
                                  Background="Transparent"
                                  KeyDown="MessageInput_KeyDown"
-                                 ToolTip="Ctrl + Enter 发送， Enter 换行"/>
+                                 ToolTip="Enter 发送，Shift + Enter 换行"/>
                         <Button x:Name="SendButton"
                                 Grid.Column="3"
                                 Margin="8,0,0,0"
                                 MinWidth="64"
                                 VerticalAlignment="Bottom"
                                 Click="SendButton_Click"
-                                Content="Send"/>
+                                Content="发送"/>
                     </Grid>
                 </StackPanel>
             </Border>

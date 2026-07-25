@@ -17,7 +17,7 @@ public partial class App : Application
     private SettingsService? _settingsService;
     private CredentialService? _credentialService;
     private StartupService? _startupService;
-    private AstrBotClient? _astrBotClient;
+    private AstrBarProtocolClient? _protocolClient;
     private AttachmentService? _attachmentService;
     private SshTunnelService? _sshTunnelService;
     private ThemeService? _themeService;
@@ -44,7 +44,7 @@ public partial class App : Application
         _settingsService = new SettingsService();
         _credentialService = new CredentialService();
         _startupService = new StartupService();
-        _astrBotClient = new AstrBotClient();
+        _protocolClient = new AstrBarProtocolClient();
         _attachmentService = new AttachmentService();
         _themeService = new ThemeService();
         _themeService.Apply(_settingsService.Current);
@@ -55,7 +55,7 @@ public partial class App : Application
             var setup = new SetupWindow(
                 _settingsService,
                 _credentialService,
-                _astrBotClient,
+                _protocolClient,
                 _sshTunnelService,
                 _themeService);
             if (setup.ShowDialog() != true)
@@ -90,7 +90,7 @@ public partial class App : Application
             _settingsService,
             _credentialService,
             _startupService,
-            _astrBotClient,
+            _protocolClient,
             _attachmentService,
             _notificationService,
             _sshTunnelService,
@@ -107,13 +107,35 @@ public partial class App : Application
         _popupWindow.Show();
         _popupWindow.Hide();
 
+        try
+        {
+            var protocolToken = _credentialService.LoadProtocolToken();
+            if (!string.IsNullOrWhiteSpace(protocolToken))
+            {
+                await _protocolClient.StartAsync(
+                    _settingsService.Current,
+                    protocolToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            if (_settingsService.Current.NotifyErrors &&
+                !_settingsService.Current.DoNotDisturb)
+            {
+                _notificationService.Show(
+                    "AstrBar Protocol 未连接",
+                    ex.Message,
+                    _settingsService.Current.SessionId);
+            }
+        }
+
         _trayIconService = new TrayIconService(
             showPopup: () => Dispatcher.Invoke(
                 () => _windowStateService.ShowPopupNearTray()),
             openSettings: () => Dispatcher.Invoke(OpenSettings),
             testNotification: () => _notificationService.Show(
                 "AstrBar 通知测试",
-                "Windows 原生通知链路已经工作。",
+                "Windows 原生通知链路已经工作，主动消息将由因果通知路由处理。",
                 _settingsService.Current.SessionId),
             exitApplication: () => Dispatcher.Invoke(Shutdown));
         _trayIconService.Initialize();
@@ -134,7 +156,7 @@ public partial class App : Application
         if (_settingsService is null ||
             _credentialService is null ||
             _startupService is null ||
-            _astrBotClient is null ||
+            _protocolClient is null ||
             _sshTunnelService is null ||
             _themeService is null)
         {
@@ -145,7 +167,7 @@ public partial class App : Application
             _settingsService,
             _credentialService,
             _startupService,
-            _astrBotClient,
+            _protocolClient,
             _sshTunnelService,
             _themeService)
         {
@@ -180,7 +202,7 @@ public partial class App : Application
         _popupWindow?.Dispose();
         _orbWindow?.Close();
         _sshTunnelService?.Dispose();
-        _astrBotClient?.Dispose();
+        _protocolClient?.Dispose();
 
         if (_ownsSingleInstanceMutex)
         {

@@ -1,20 +1,21 @@
-AstrBar v0.3.0 diagnostic scripts
-
-Normal use no longer requires a terminal SSH tunnel. AstrBar now starts and
-maintains its own local port forwarding through SSH.NET.
-
-start-tunnel.ps1
-  Emergency/debug fallback for comparing the built-in tunnel with OpenSSH.
-  DO NOT keep it running while AstrBar is using the same local port.
-
-test-astrbot.ps1
-  Tests OpenAPI, file scope and Chat SSE.
-  Example:
-    .\scripts\test-astrbot.ps1 -ApiKey "abk_xxx" -WakePrefix "/chat"
+AstrBar v1.0 scripts
 
 build.ps1
-  Restores NuGet packages and builds the Visual Studio solution with .NET 8.
+  Restores NuGet packages and builds the Debug configuration.
 
-Required API key scopes:
-  -chat
-  -file
+publish.ps1
+  Creates a self-contained Windows x64 release folder and ZIP.
+  Example:
+    .\scripts\publish.ps1 -Version 1.0.0
+
+start-tunnel.ps1
+  Emergency/debug OpenSSH tunnel. Normal use should rely on AstrBar's embedded
+  SSH.NET tunnel. Do not run both on the same local port.
+
+test-astrbot.ps1
+  Tests the AstrBar Essential state endpoint and WebSocket client.hello /
+  server.welcome handshake.
+  Example:
+    .\scripts\test-astrbot.ps1 -Token "your-protocol-token"
+
+Default AstrBar Protocol port: 6190

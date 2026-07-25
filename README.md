@@ -1,146 +1,197 @@
-# AstrBar v0.3.1
+# AstrBar v1.0.0
 
-AstrBar 是一个轻量的 AstrBot 桌面客户端。它驻留在任务栏通知区域，也可以缩成悬浮圆球，并通过 SSH 隧道安全访问远程服务器上的 AstrBot。
+AstrBar 是一个面向 AstrBot 的轻量 Windows 桌面客户端。
 
-## v0.3.0 新增
+v1.0 不再借用 AstrBot 默认 WebChat/OpenAPI 作为聊天入口，而是与 `astrbot_plugin_astrbar_essential` 提供的原生 `astrbar` 平台适配器通信。第三方插件仍然面对 AstrBot 标准事件和消息链，因此不需要为了 AstrBar 修改代码。
 
-- 首次启动向导
-  - 服务器公网 IP 或域名
-  - SSH 端口、用户名与密码
-  - AstrBot 服务器端口与本地转发端口
-  - AstrBot API Key、username、session_id
-  - 界面主题和悬浮球颜色
-  - 一键建立隧道并测试 `chat`、`file` 权限
-- 内置 SSH 隧道
-  - 程序启动时自动连接
-  - KeepAlive 与断线自动重连
-  - 首次连接记录 SSH 主机 SHA256 指纹
-  - 指纹变化时拒绝连接，防止误连到其他服务器
-- 上传附件
-  - 点击输入框左侧的 `＋` 选择文件
-  - 支持拖拽文件到输入区域
-  - 支持图片、音频及其他 AstrBot 可接收文件
-  - 每条消息最多 8 个附件，单个文件上限 250 MB
-  - 图片在发送前显示缩略图
-- 多套主题
-- 独立悬浮球颜色
+## v1.0 的变化
 
-## 技术栈
+- 使用 AstrBar Protocol v1，通过 WebSocket 双向传输消息
+- 使用 HTTP 上传和下载附件
+- AstrBot 中注册独立的 `astrbar` 消息平台
+- 支持流式文字、图片、音频、视频、文件和引用消息
+- 支持服务端主动消息与离线消息重放
+- 支持消息 ACK、事件去重、心跳和自动重连
+- 上报窗口可见、聚焦与勿扰状态
+- 基于消息因果关系决定 Windows 通知，而非要求第三方插件发送通知标记
+- 保留 v0.3.1 的内置 SSH 隧道、托盘、悬浮球、主题与附件界面
+
+## 组成
+
+AstrBar v1.0 需要同时部署：
 
 ```text
-.NET 8
-C# 12
-WPF + XAML
-HttpClient + HTTP SSE
-SSH.NET 2025.1.0
-System.Text.Json
-Windows DPAPI
-Microsoft Windows App SDK 通知
-System.Windows.Forms.NotifyIcon
+Windows
+└─ AstrBar v1.0 客户端
+
+AstrBot 服务器
+└─ astrbot_plugin_astrbar_essential v1.0
+   └─ AstrBar 平台适配器与 Protocol 网关
 ```
 
-## 环境要求
-
-### Windows 客户端
+## 环境
 
 - Windows 10 2004 或更高版本，推荐 Windows 11
-- Visual Studio 2022
-- “.NET 桌面开发”工作负载
+- Visual Studio 2022，安装“.NET 桌面开发”工作负载
 - .NET 8 SDK
+- 可正常运行的 AstrBot
+- `astrbot_plugin_astrbar_essential` v1.0.0
 
-### 服务器
+## 服务器部署
 
-- SSH 可通过公网访问
-- 用户名与密码可以正常登录 SSH
-- AstrBot 正在服务器上运行
-- AstrBot OpenAPI 在服务器本机可访问，例如：
+### 1. 安装 Essential 插件
 
-```text
-http://127.0.0.1:6185 （Astrbot默认端口）
-```
-
-- API Key 至少具有：
+将插件目录放入 AstrBot：
 
 ```text
-chat
-file
+AstrBot/data/plugins/astrbot_plugin_astrbar_essential
 ```
 
-## 第一次运行
+在 AstrBot WebUI 中重载插件，然后进入消息平台配置，新增 `AstrBar` 平台。
 
-1. 填写以下信息
-```text
-服务器公网 IP 或域名（只填 IP 或域名，不用加 http://）
-SSH 端口：通常为 22
-SSH 用户名：例如 root
-SSH 密码：服务器登录密码
-AstrBot 服务器端口：默认 6185
-本地转发端口：默认 6185
-API Key：需要 chat 与 file scope
-```
-
-2. 点击“测试并进入 AstrBar”。
-3. SSH 和 AstrBot 测试都成功后，设置会保存，聊天窗口启动。
-
-## 上传附件
-
-### 选择文件
-
-点击消息输入框左侧的 `＋`，可多选文件。也可以直接把文件拖进输入区域。
-
-### 发送链路（技术细节）
+建议配置：
 
 ```text
-本地文件
-  ↓ multipart/form-data
-POST /api/v1/file
-  ↓
-AstrBot 返回 attachment_id 和附件类型
-  ↓
-POST /api/v1/chat
-message 中携带 attachment_id
+id: astrbar-main
+host: 0.0.0.0
+port: 6190
+token: 一段随机且足够长的令牌
+heartbeat_interval: 20
+max_attachment_mb: 128
+attachment_ttl_hours: 24
+delivery_ttl_hours: 72
 ```
 
-图片、音频、视频会按 MIME 类型分别作为 `image`、`record`、`video` 发送，其他格式作为 `file` 发送。是否能被模型直接理解，还取决于 AstrBot、模型和插件的能力。
+### 2. Docker 映射端口
 
-## 主题与悬浮球
+若 AstrBot 在 Docker 中运行，需要把网关映射到服务器回环地址：
 
-右键托盘图标，打开“设置 → 外观”
+```yaml
+ports:
+  - "127.0.0.1:6190:6190"
+```
 
-- 修改选项时会即时预览，点击“取消”会恢复原主题。
+不要把 6190 直接暴露到公网。AstrBar 默认通过 SSH 隧道访问它。
 
-## 配置与凭据位置
+## Windows 客户端初始化
 
-所有持久数据都位于用户的 LocalAppData，而非程序目录：
+首次运行填写：
 
 ```text
-%LOCALAPPDATA%\AstrBar\settings.json
-%LOCALAPPDATA%\AstrBar\api-key.bin
-%LOCALAPPDATA%\AstrBar\ssh-password.bin
-%LOCALAPPDATA%\AstrBar\Cache\Attachments\
+服务器公网 IP 或域名
+SSH 端口，默认 22
+SSH 用户名与密码
+AstrBar Protocol 服务器端口，默认 6190
+本地转发端口，默认 6190
+AstrBar Protocol Token
+user_id
+session_id
+device_id 与设备名称
 ```
 
-- `settings.json` 保存非机密设置，例如服务器地址、端口、用户名、主题和主机指纹。
-- API Key 与 SSH 密码分别通过 Windows DPAPI 的 `CurrentUser` 范围加密。
-- 注意：加密文件只适合由当前 Windows 用户在本机读取，不应复制到其他电脑作为凭据备份。
+连接链路：
 
-## SSH 主机指纹
-
-第一次成功连接时，AstrBar 会记录 SSH 主机 SHA256 指纹。以后连接必须与已记录指纹一致。
-
-服务器重装或 SSH 主机密钥确实发生改变时：
-
-1. 先在服务器控制台确认变更是预期的。
-2. 打开 AstrBar 设置。
-3. 点击“重新信任主机”。
-4. 再点击“测试并重连”。
-
-不要在没有确认服务器状态时盲目清除指纹。
-
-## 发送模式
-
-- **自动**：自动识别消息类型。
-- **对话**：强制按 LLM 对话发送。
-- **命令**：完全原样发送，适合插件命令。
-
+```text
+AstrBar
+→ 内置 SSH 隧道
+→ 服务器 127.0.0.1:6190
+→ AstrBar Essential
+→ AstrBot 标准事件管道
+→ LLM 与第三方插件
 ```
+
+v1.0 不需要 AstrBot OpenAPI Key，也不需要 `chat`、`file` scope。初始化中的 Protocol Token 必须与 Essential 平台配置中的 `token` 完全一致。
+
+## 从 v0.3.1 升级
+
+v1.0 会识别旧配置，并重新打开初始化向导，因为通信后端已从 WebChat 6185 切换为 AstrBar Protocol 6190。
+
+设置和凭据仍位于：
+
+```text
+%LOCALAPPDATA%\AstrBar
+```
+
+主要文件：
+
+```text
+settings.json
+protocol-token.bin
+ssh-password.bin
+Cache\Attachments\
+```
+
+Protocol Token 与 SSH 密码使用 Windows DPAPI CurrentUser 加密，不写入程序目录。
+
+## 通知逻辑
+
+AstrBar 不要求第三方插件发送专用通知信号。
+
+- 由当前客户端请求产生的消息标记为 `response`
+- 经 AstrBot 标准主动发送路径产生的消息标记为 `proactive`
+- 客户端根据窗口是否可见、是否聚焦、是否勿扰以及任务耗时决定是否显示 Windows 通知
+
+默认规则：
+
+```text
+主动消息 + 窗口未聚焦       → 通知
+普通回复 + 窗口未聚焦       → 通知
+长任务完成 + 窗口未聚焦     → “后台任务已完成”通知
+窗口正在聚焦               → 只更新聊天界面
+勿扰模式                   → 不弹通知
+```
+
+## 编译
+
+在包含 `AstrBar.sln` 的目录运行：
+
+```powershell
+.\scripts\build.ps1
+```
+
+或使用 Visual Studio：
+
+```text
+打开 AstrBar.sln
+→ 还原 NuGet
+→ 将 AstrBar.App 设为启动项目
+→ 生成解决方案
+→ F5
+```
+
+主要依赖：
+
+```text
+Microsoft.WindowsAppSDK
+SSH.NET
+System.Security.Cryptography.ProtectedData
+```
+
+## Release 发布
+
+```powershell
+.\scripts\publish.ps1 -Version 1.0.0
+```
+
+输出位于：
+
+```text
+release\AstrBar-v1.0.0-win-x64\
+release\AstrBar-v1.0.0-win-x64.zip
+```
+
+当前源码未附带可信代码签名证书。开启 Smart App Control 的设备可能拦截未签名构建。
+
+## 文档
+
+- `docs/ASTRBAR_PROTOCOL.md`：客户端使用的协议字段与事件
+- `docs/ARCHITECTURE.md`：客户端与平台适配器架构
+- `docs/DEVELOPMENT.md`：代码结构与开发约束
+- `docs/TESTING.md`：v1.0 回归测试清单
+- `docs/ROADMAP.md`：后续版本方向
+
+## 当前限制
+
+- AstrBot 暂未向平台适配器暴露稳定的按请求取消接口，因此“停止”会立即停止客户端等待，但服务端任务可能继续运行
+- 仅保证兼容使用 AstrBot 标准消息接口的插件，直接调用 QQ、Telegram 等平台私有 API 的插件仍属于特定平台插件
+- 本仓库提供源码，不包含已签名的 Windows 安装包
